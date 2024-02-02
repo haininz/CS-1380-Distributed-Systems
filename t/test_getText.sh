@@ -6,6 +6,8 @@ cd "$(dirname "$0")/..$R_FOLDER" || exit 1
 
 DIFF=${DIFF:-diff}
 
+cat "$T_FOLDER"/d/d0.txt | node c/getText.js | sort
+
 if $DIFF <(cat "$T_FOLDER"/d/d0.txt | c/getText.js | sort) <(sort "$T_FOLDER"/d/d2.txt) > /dev/null;
 then
     echo "$0 success: texts are identical"
