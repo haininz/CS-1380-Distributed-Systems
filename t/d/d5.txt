@@ -1,18 +1,16 @@
 check	stuff	level
 check	stuff	level
 level	check	stuff
-level	right	
+level	right
 link	check	stuff
-right		
+right
 simpl	link	check
 stuff	level	check
 stuff	level	right
 check	stuff
 check	stuff
 level	check
-level	right
 link	check
-right	
 simpl	link
 stuff	level
 stuff	level
@@ -21,7 +19,6 @@ check
 level
 level
 link
-right
 simpl
 stuff
 stuff
