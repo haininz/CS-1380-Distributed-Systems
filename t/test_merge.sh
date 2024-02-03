@@ -9,6 +9,7 @@ DIFF=${DIFF:-diff}
 DIFF_PERCENT=${DIFF_PERCENT:-0}
 
 cat /dev/null > d/global-index.txt
+# cat d/global-index.txt
 
 files=("$T_FOLDER"/d/m{1..3}.txt)
 
@@ -19,6 +20,7 @@ do
 done
 
 if DIFF_PERCENT=$DIFF_PERCENT t/gi-diff.js <(sort d/global-index.txt) <(sort "$T_FOLDER"/d/m4.txt) > /dev/null;
+# if DIFF_PERCENT=$DIFF_PERCENT t/gi-diff.js <(sort d/global-index.txt) <(sort "$T_FOLDER"/d/m4.txt);
 then
     echo "$0 success: global indexes are identical"
 else
