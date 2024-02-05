@@ -8,12 +8,12 @@ var natural = require('natural');
 const stemmer = natural.PorterStemmer;
 
 var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false,
 });
 
-rl.on('line', function (line) {
-    // TODO some code
-    console.log(stemmer.stem(line));
+rl.on('line', function(line) {
+  // TODO some code
+  console.log(stemmer.stem(line));
 });
