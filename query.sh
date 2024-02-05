@@ -4,5 +4,8 @@
 # along  with appropriate stemming of the input strings and stripping of the 
 # index metadata
 
-echo "$@" | cat
+# echo "$@" | cat
 
+GLOBAL_INDEX="d/global-index.txt"
+SEARCH_PATTERN=$(echo "$@" | sed 's/ /|/g')
+grep -Eiw "$SEARCH_PATTERN" "$GLOBAL_INDEX"
