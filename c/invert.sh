@@ -5,6 +5,6 @@
 url="$1"
 
 sort | uniq -c |
-while read count word; do
+while read -r count word; do
     printf "%s | %s | %s\n" "$word" "$count" "$url"
 done

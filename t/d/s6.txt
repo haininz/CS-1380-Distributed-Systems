@@ -1,0 +1,7 @@
+WELCOME TO OUR EXAMPLE PAGE
+
+Discover About Us [info/about.html].
+
+Explore Our Projects [projects/index.html].
+
+© 2024 Example Company. All rights reserved.

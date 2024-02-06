@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #444;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #007BFF;
+        }
+
+        a {
+            color: #795548;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        a:hover {
+            color: #D81B60;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding: 15px;
+            background-color: #607D8B;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our Example Page</h1>
+        <p>Discover <a href="info/about.html">About Us</a>.</p>
+        <p>Explore <a href="projects/index.html">Our Projects</a>.</p>
+    </div>
+    <div class="footer">
+        <p>© 2024 Example Company. All rights reserved.</p>
+    </div>
+</body>
+</html>

@@ -10,14 +10,21 @@ let baseURL = process.argv[2] + '/';
 // If the baseURL is a file rather than a directory (e.g. "https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/index.html/"), then we need to remove the last part of substring ("index.html")
 let endWithFile = false;
 let secondToLastSlash = -1;
+let suffix = '';
 for (i = baseURL.lastIndexOf('/') - 1; i >= 0; i--) {
   if (baseURL[i] == '.') {
-    endWithFile = true;
+    let temp = suffix.split('').reverse().join('');
+    if (temp == 'html' || temp == 'pdf') {
+      endWithFile = true;
+    } else {
+      break;
+    }
   }
   if (baseURL[i] == '/') {
     secondToLastSlash = i;
     break;
   }
+  suffix += baseURL[i];
 }
 
 if (endWithFile) {

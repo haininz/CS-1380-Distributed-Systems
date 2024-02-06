@@ -7,5 +7,5 @@
 # echo "$@" | cat
 
 GLOBAL_INDEX="d/global-index.txt"
-SEARCH_PATTERN=$(echo "$@" | sed 's/ /|/g')
+SEARCH_PATTERN="${*// /|}"
 grep -Eiw "$SEARCH_PATTERN" "$GLOBAL_INDEX"
