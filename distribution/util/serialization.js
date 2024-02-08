@@ -1,16 +1,43 @@
 function serialize(object) {
+  // Base case for undefined
   if (object === undefined) {
     return 'undefined';
   }
 
+  // Handling Date objects
   if (object instanceof Date) {
-    return JSON.stringify({data_type: 'Date', value: object});
+    return JSON.stringify({ data_type: 'Date', value: object.toISOString() });
   }
 
+  // Handling Error objects
   if (object instanceof Error) {
-    return JSON.stringify({data_type: 'Error', message: object.message, stack: object.stack});
+    return JSON.stringify({ data_type: 'Error', message: object.message, stack: object.stack });
   }
 
+  // Handling functions
+  if (typeof object === 'function') {
+    return JSON.stringify({ data_type: 'Function', code: object.toString() });
+  }
+
+  // Handling arrays and objects
+  if (typeof object === 'object' && object !== null) {
+    const isObject = !Array.isArray(object);
+    const processed = isObject ? {} : [];
+
+    Object.entries(object).forEach(([key, value]) => {
+      // Recursively serialize each property or element
+      if (isObject) {
+        processed[key] = serialize(value); // Assign directly for objects
+      } else {
+        processed.push(serialize(value)); // Push directly for arrays
+      }
+    });
+
+    // The final structure is ready to be stringified as a whole
+    return isObject ? `{${Object.entries(processed).map(([k, v]) => `"${k}":${v}`).join(',')}}` : `[${processed.join(',')}]`;
+  }
+
+  // Fallback for primitive types (number, string, boolean, null)
   return JSON.stringify(object);
 }
 
@@ -18,20 +45,40 @@ function deserialize(string) {
   if (string === 'undefined') {
     return undefined;
   }
-  const data = JSON.parse(string);
 
-  if (data && data.data_type === 'Date') {
-    return new Date(data.value);
+  // Initial parse to convert the string into a JavaScript structure
+  let parsedData = JSON.parse(string);
+
+  // Function to recursively process the object
+  function processObject(object) {
+    if (Array.isArray(object)) {
+      return object.map(item => processObject(item));
+    } else if (typeof object === 'object' && object !== null) {
+      if (object.data_type === 'Function') {
+        // Recreate the function from its code
+        return new Function(`return (${object.code})`)();
+      } else if (object.data_type === 'Date') {
+        return new Date(object.value);
+      } else if (object.data_type === 'Error') {
+        const error = new Error(object.message);
+        error.stack = object.stack;
+        return error;
+      } else {
+        // Iterate through each property for nested objects
+        for (const key of Object.keys(object)) {
+          object[key] = processObject(object[key]);
+        }
+      }
+    }
+    return object;
   }
 
-  if (data && data.data_type === 'Error') {
-    const error = new Error(data.message);
-    error.stack = data.stack;
-    return error;
-  }
+  // Apply the processing function to the parsed data
+  parsedData = processObject(parsedData);
 
-  return data;
+  return parsedData;
 }
+
 
 module.exports = {
   serialize: serialize,
