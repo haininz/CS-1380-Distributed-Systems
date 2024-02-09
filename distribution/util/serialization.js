@@ -1,7 +1,12 @@
+let visited = new Set();
+let duplicates = new Map();
+let auto_inc_id = 0;
+
 function serialize(object) {
   // Base case for undefined
   if (object === undefined) {
-    return 'undefined';
+    // return 'undefined';
+    return JSON.stringify({ data_type: 'Undefined', value: undefined });
   }
 
   // Handling Date objects
@@ -21,15 +26,23 @@ function serialize(object) {
 
   // Handling arrays and objects
   if (typeof object === 'object' && object !== null) {
+    if (visited.has(object)) {
+      duplicates.set(auto_inc_id, object);
+      return JSON.stringify({ data_type: 'Dup', value: auto_inc_id++ });;
+    }
+
+    visited.add(object);
+
     const isObject = !Array.isArray(object);
     const processed = isObject ? {} : [];
 
     Object.entries(object).forEach(([key, value]) => {
       // Recursively serialize each property or element
-      if (isObject) {
-        processed[key] = serialize(value); // Assign directly for objects
-      } else {
-        processed.push(serialize(value)); // Push directly for arrays
+      const serializedValue = serialize(value);
+      if (isObject) { // Assign directly for objects
+        processed[key] = serializedValue;
+      } else { // Push directly for arrays
+        processed.push(serializedValue);
       }
     });
 
@@ -42,10 +55,6 @@ function serialize(object) {
 }
 
 function deserialize(string) {
-  if (string === 'undefined') {
-    return undefined;
-  }
-
   // Initial parse to convert the string into a JavaScript structure
   let parsedData = JSON.parse(string);
 
@@ -63,7 +72,12 @@ function deserialize(string) {
         const error = new Error(object.message);
         error.stack = object.stack;
         return error;
-      } else {
+      } else if (object.data_type === 'Undefined') {
+        return undefined;
+      } else if (object.data_type === 'Dup') {
+        return duplicates.get(object.value);
+      } 
+      else {
         // Iterate through each property for nested objects
         for (const key of Object.keys(object)) {
           object[key] = processObject(object[key]);
