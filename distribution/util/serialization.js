@@ -7,7 +7,7 @@ let stringToNativeFunctions = new Map();
 
 let nativeFunctionCheckList = [globalThis, console]
 
-for (i = 0; i < nativeFunctionCheckList.length; i++) {
+for (let i = 0; i < nativeFunctionCheckList.length; i++) {
   Object.getOwnPropertyNames(nativeFunctionCheckList[i]).forEach(prop => {
     const value = nativeFunctionCheckList[i][prop];
     if (typeof value === 'function') {
