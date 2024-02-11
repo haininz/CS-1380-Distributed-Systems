@@ -2,6 +2,21 @@ let visited = new Set();
 let duplicates = new Map();
 let auto_inc_id = 0;
 
+let nativeFunctionsToString = new Map();
+let stringToNativeFunctions = new Map();
+
+let nativeFunctionCheckList = [globalThis, console]
+
+for (i = 0; i < nativeFunctionCheckList.length; i++) {
+  Object.getOwnPropertyNames(nativeFunctionCheckList[i]).forEach(prop => {
+    const value = nativeFunctionCheckList[i][prop];
+    if (typeof value === 'function') {
+      nativeFunctionsToString.set(value, prop);
+      stringToNativeFunctions.set(prop, value);
+    }
+  });
+}
+
 function serialize(object) {
   // Base case for undefined
   if (object === undefined) {
@@ -21,6 +36,9 @@ function serialize(object) {
 
   // Handling functions
   if (typeof object === 'function') {
+    if (nativeFunctionsToString.has(object)) {
+      return JSON.stringify({ data_type: 'Native', code: nativeFunctionsToString.get(object) });
+    }
     return JSON.stringify({ data_type: 'Function', code: object.toString() });
   }
 
@@ -68,7 +86,10 @@ function deserialize(string) {
         return new Function(`return (${object.code})`)();
       } else if (object.data_type === 'Date') {
         return new Date(object.value);
-      } else if (object.data_type === 'Error') {
+      } else if (object.data_type == 'Native') {
+        return stringToNativeFunctions.get(object.code);
+      } 
+      else if (object.data_type === 'Error') {
         const error = new Error(object.message);
         error.stack = object.stack;
         return error;
@@ -76,7 +97,7 @@ function deserialize(string) {
         return undefined;
       } else if (object.data_type === 'Dup') {
         return duplicates.get(object.value);
-      } 
+      }
       else {
         // Iterate through each property for nested objects
         for (const key of Object.keys(object)) {
