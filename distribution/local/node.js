@@ -4,14 +4,21 @@
     It will take a callback as an argument.
     After your node has booted, you should call the callback.
 */
+const http = require('http');
+const url = require('url');
 
+const local = require('../local/local');
+const util = require('../util/util');
 
 const start = function(started) {
   const server = http.createServer((req, res) => {
     /* Your server will be listening for PUT requests. */
 
     // Write some code...
-
+    if (req.method !== 'PUT') {
+      res.writeHead(405);
+      res.end('Only PUT Method is Allowed');
+    }
 
     /*
       The path of the http request will determine the service to be used.
@@ -20,6 +27,13 @@ const start = function(started) {
 
 
     // Write some code...
+    console.log("url: " + req.url);
+
+    const urlSplit = req.url.trim().split('/');
+    const service = urlSplit[1];
+    const method = urlSplit[2];
+
+    console.log("service: " + service + "; method: " + method); // service: status, method: get
 
 
     /*
@@ -38,28 +52,47 @@ const start = function(started) {
   */
 
     // Write some code...
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
 
+    /* Here, you can handle the service requests. */
+    // Write some code...?
 
-      /* Here, you can handle the service requests. */
-
-      // Write some code...
-
-
-        /*
+    /*
       Here, we provide a default callback which will be passed to services.
       It will be called by the service with the result of it's call
       then it will serialize the result and send it back to the caller.
-        */
-        const serviceCallback = (e, v) => {
-          res.end(serialization.serialize([e, v]));
-        };
+    */
+    const serviceCallback = (e, v) => {
+      res.end(util.serialize([e, v]));
+    };
 
-        // Write some code...
+    // Write some code...
+    req.on('end', () => {
+      console.log("data: " + body);
+      try {
+        local.routes.get(service, (e, v) => {
+          if (e !== null) {
+            console.error("Error routing");
+          } else {
+            // v[method](...JSON.parse(body).message, (e, v) => {
+            //   console.log("res e: " + e);
+            //   console.log("res v: " + v);
+            // });
 
+            v[method](...JSON.parse(body).message, serviceCallback);
+          }
+        });
+      } catch (error) {
+        console.log("error: " + error);
+        res.writeHead(400);
+        res.end('Invalid JSON');
+      }
+    });
   });
 
-
-  // Write some code...
 
   /*
     Your server will be listening on the port and ip specified in the config
