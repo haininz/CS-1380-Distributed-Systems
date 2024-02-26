@@ -1,4 +1,7 @@
 const id = require('../util/id');
+const {serialize} = require('../util/util');
+const childProcess = require('child_process');
+const path = require('path');
 
 const status = {};
 
@@ -24,5 +27,32 @@ status.get = function(configuration, callback) {
   }
 };
 
+status.spawn = function(node, callback) {
+  node.onStart = node.onStart || function() {};
+
+  node.onStart = new Function(
+      `
+        let originalOnStart = ${node.onStart.toString()};
+        let callbackRPC = ${distribution.util.wire.createRPC(
+      distribution.util.wire.toAsync(callback)).toString()};
+
+        originalOnStart();
+        callbackRPC(null, global.nodeConfig, ()=>{});
+    `,
+  );
+
+  childProcess.spawn('node', [
+    path.join(__dirname, '../../distribution.js'),
+    '--config',
+    serialize(node)],
+  {
+    detached: true,
+  });
+};
+
+status.stop = function(callback) {
+  callback(null, global.nodeConfig);
+  process.exit(0);
+};
 
 module.exports = status;
