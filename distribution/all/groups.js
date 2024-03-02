@@ -1,5 +1,3 @@
-// const local = require("../local/local");
-
 groupsTemplate = (config) => {
   let gid = config.gid || 'global';
   const groups = {
@@ -11,9 +9,6 @@ groupsTemplate = (config) => {
           '12ab0': {ip: '127.0.0.1', port: 8081},
         }
         */
-
-        // console.log('global.distribution: ' +
-        // JSON.stringify(global.distribution));
 
         if (e != null) {
           console.log('groupsTemplate.groups.put error: ' + e);

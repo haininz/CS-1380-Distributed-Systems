@@ -47,6 +47,7 @@ status.spawn = function(node, callback) {
     serialize(node)],
   {
     detached: true,
+    stdio: 'inherit',
   });
 };
 
