@@ -21,4 +21,4 @@ My implementation comprises `<number>` new software components, totaling `<numbe
 ## Time to Complete
 > Roughly, how many hours did this milestone take you to complete?
 
-Hours: `<time>`
+Hours: 8 hrs

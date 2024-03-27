@@ -32,10 +32,34 @@ function naiveHash(kid, nids) {
 }
 
 function consistentHash(kid, nids) {
+  const kidHash = idToNum(kid);
+  const temp = [];
+  nids.forEach((nid) => {
+    temp.push([nid, idToNum(nid)]);
+  });
+  temp.sort((a, b) => a[1] - b[1]);
+
+  for (let [id, hash] of temp) {
+    if (hash > kidHash) {
+      return id;
+    }
+    return temp[0][0];
+  }
 }
 
-
 function rendezvousHash(kid, nids) {
+  let curMax = -Infinity;
+  let res = null;
+
+  nids.forEach((nid, index) => {
+    let temp = idToNum(getID(kid + nid));
+    if (temp > curMax) {
+      curMax = temp;
+      res = nid;
+    }
+  });
+
+  return res;
 }
 
 module.exports = {
