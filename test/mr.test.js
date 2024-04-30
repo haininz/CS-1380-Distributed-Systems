@@ -6,6 +6,7 @@ const groupsTemplate = require('../distribution/all/groups');
 
 const ncdcGroup = {};
 const dlibGroup = {};
+const crawlGroup = {};
 
 /*
    This hack is necessary since we can not
@@ -34,6 +35,10 @@ beforeAll((done) => {
   dlibGroup[id.getSID(n2)] = n2;
   dlibGroup[id.getSID(n3)] = n3;
 
+  crawlGroup[id.getSID(n1)] = n1;
+  crawlGroup[id.getSID(n2)] = n2;
+  crawlGroup[id.getSID(n3)] = n3;
+
   const startNodes = (cb) => {
     distribution.local.status.spawn(n1, (e, v) => {
       distribution.local.status.spawn(n2, (e, v) => {
@@ -52,7 +57,10 @@ beforeAll((done) => {
       groupsTemplate(ncdcConfig).put(ncdcConfig, ncdcGroup, (e, v) => {
         const dlibConfig = {gid: 'dlib'};
         groupsTemplate(dlibConfig).put(dlibConfig, dlibGroup, (e, v) => {
-          done();
+          const crawlConfig = {gid: 'crawl'};
+          groupsTemplate(crawlConfig).put(crawlConfig, crawlGroup, (e, v) => {
+            done();
+          });
         });
       });
     });
@@ -234,6 +242,202 @@ test('(25 pts) all.mr:dlib', (done) => {
     distribution.dlib.store.put(value, key, (e, v) => {
       cntr++;
       // Once we are done, run the map reduce
+      if (cntr === dataset.length) {
+        doMapReduce();
+      }
+    });
+  });
+});
+
+const path = require('path');
+const fs = require('fs');
+
+test('Crawl', (done) => {
+  let m1 = async function(key, url) {
+    let o = {};
+    try {
+      const response = await global.fetch(url);
+      const html = await response.text();
+      o[url] = html;
+    } catch (error) {
+      console.error('Error extracting text from URL: ', error);
+    }
+    return o;
+  };
+
+  let r1 = (key, value) => {
+    let out = {};
+    out[key] = value;
+    return out;
+  };
+
+  let dataset = [{0: 'http://example.com'}];
+
+  const contentPath = path.join(__dirname, '../example.txt');
+  const content = fs.readFileSync(contentPath, 'utf8');
+  let expected = [
+    {
+      'http://example.com': [content],
+    },
+  ];
+
+  const doMapReduce = (cb) => {
+    distribution.crawl.store.get(null, (e, v) => {
+      try {
+        expect(v.length).toBe(dataset.length);
+      } catch (e) {
+        done(e);
+      }
+
+      distribution.crawl.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+        try {
+          expect(v).toEqual(expect.arrayContaining(expected));
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+  };
+
+  let cntr = 0;
+
+  dataset.forEach((o) => {
+    let key = Object.keys(o)[0];
+    let value = o[key];
+    distribution.crawl.store.put(value, key, (e, v) => {
+      cntr++;
+      if (cntr === dataset.length) {
+        doMapReduce();
+      }
+    });
+  });
+});
+
+test('Inverted Index', (done) => {
+  const m1 = async function(key, url) {
+    let o = {};
+    try {
+      const response = await global.fetch(url);
+      const html = await response.text();
+      html.split(/\s+/).forEach((word) => {
+        word = word.toLowerCase().replace(/[^\w]/g, '');
+        if (word) {
+          if (!o[word]) o[word] = [];
+          o[word].push(url);
+        }
+      });
+    } catch (error) {
+      console.error('Error extracting text from URL:', error);
+    }
+    return o;
+  };
+
+  const r1 = (key, values) => {
+    let merged = [];
+    values.forEach((value) => {
+      merged = merged.concat(value);
+    });
+    return {[key]: merged};
+  };
+
+  let dataset = [{0: 'http://example.com'}];
+  let expected = [
+    {'example': ['http://example.com']},
+    {'test': ['http://example.com']},
+  ];
+
+  const doMapReduce = (cb) => {
+    distribution.inverted.store.get(null, (e, v) => {
+      try {
+        expect(v.length).toBe(dataset.length);
+      } catch (e) {
+        done(e);
+      }
+
+      distribution.inverted.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+        try {
+          expect(v).toEqual(expect.arrayContaining(expected));
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+  };
+
+  let cntr = 0;
+
+  dataset.forEach((o) => {
+    let key = Object.keys(o)[0];
+    let value = o[key];
+    distribution.inverted.store.put(value, key, (e, v) => {
+      cntr++;
+      if (cntr === dataset.length) {
+        doMapReduce();
+      }
+    });
+  });
+});
+
+test('String Matching', (done) => {
+  const keywords = ['example', 'test', 'node'];
+
+  const m1 = async function(key, url) {
+    let counts = {};
+    try {
+      const response = await global.fetch(url);
+      const html = await response.text();
+      keywords.forEach((keyword) => {
+        const matchCount = (html.match(new RegExp(keyword, 'gi')) || []).length;
+        if (matchCount > 0) {
+          counts[keyword] = matchCount;
+        }
+      });
+    } catch (error) {
+      console.error('Error extracting text from URL:', error);
+    }
+    return counts;
+  };
+
+  const r1 = (key, values) => {
+    let total = values.reduce((sum, current) => sum + current, 0);
+    return {[key]: total};
+  };
+
+  let dataset = [{0: 'http://example.com'}];
+  let expected = [
+    {'example': 3},
+    {'test': 5},
+    {'node': 2},
+  ];
+
+  const doMapReduce = (cb) => {
+    distribution.sm.store.get(null, (e, v) => {
+      try {
+        expect(v.length).toBe(dataset.length);
+      } catch (e) {
+        done(e);
+      }
+
+      distribution.sm.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+        try {
+          expect(v).toEqual(expect.arrayContaining(expected));
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+  };
+
+  let cntr = 0;
+
+  dataset.forEach((o) => {
+    let key = Object.keys(o)[0];
+    let value = o[key];
+    distribution.sm.store.put(value, key, (e, v) => {
+      cntr++;
       if (cntr === dataset.length) {
         doMapReduce();
       }
