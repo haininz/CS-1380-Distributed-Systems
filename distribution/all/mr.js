@@ -57,8 +57,8 @@ const mr = function(config) {
                         (e, v) => {
                           asyncCounter++;
                           mapResults = mapResults.concat(Object.values(v));
-                          console.log('Current e: ' + JSON.stringify(e));
-                          console.log('Current v: ' + JSON.stringify(v));
+                          // console.log('Current e: ' + JSON.stringify(e));
+                          // console.log('Current v: ' + JSON.stringify(v));
                           if (asyncCounter === keys.length) {
                             // Flat the array
                             mapResults = [].concat(...mapResults);
